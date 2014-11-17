@@ -125,12 +125,7 @@ class CanvasTextField {
 			var negativeSize:Bool = textField.width <= 0 || textField.height <= 0;
 			var noAutoSize:Bool = textField.autoSize == TextFieldAutoSize.NONE;
 			
-			if((textField.__text == null || textField.__text == "") && !textField.background && !textField.border || negativeSize && noAutoSize) {
-				
-				textField.__canvas = null;
-				textField.__context = null;
-				
-			} else if (negativeSize && !noAutoSize && textField.wordWrap) {
+			if((textField.__text == null || textField.__text == "") && !textField.background && !textField.border || negativeSize && noAutoSize /*|| negativeSize && !noAutoSize && textField.wordWrap*/) {
 				
 				textField.__canvas = null;
 				textField.__context = null;
@@ -150,6 +145,8 @@ class CanvasTextField {
 				context = textField.__context;
 				
 				if (textField.__text != null && textField.__text != "") {
+					
+					var fullAutoSize = !textField.wordWrap && textField.autoSize != TextFieldAutoSize.NONE;
 					
 					var measurements = [];
 					var textWidth = 0.0;
@@ -171,7 +168,7 @@ class CanvasTextField {
 							textField.__height = textField.textHeight+4;
 						}
 						
-					} else if (!textField.wordWrap && textField.autoSize != TextFieldAutoSize.NONE)
+					} else if (fullAutoSize)
 					{	
 						measurements =  textField.__measureText ();
 						
@@ -223,6 +220,8 @@ class CanvasTextField {
 						var range;
 						var offsetX = 0.0;
 						
+						if (!fullAutoSize)	measurements =  textField.__measureText ();
+						
 						for (i in 0...textField.__ranges.length) {
 							
 							range = textField.__ranges[i];
@@ -248,9 +247,23 @@ class CanvasTextField {
 					
 					if (textField.wordWrap && !noAutoSize) {
 						
+						textField.__width = 1;
 						textField.__height = 4;
 						
 					} else if (!noAutoSize) {
+						
+						switch(textField.autoSize)
+						{
+							case TextFieldAutoSize.RIGHT:
+									
+									textField.x = textField.__x - 4 * textField.__scaleX;
+									
+							case TextFieldAutoSize.CENTER:
+								
+									textField.x = textField.__x - 2 * textField.__scaleX;
+									
+							default:	0;
+						}
 						
 						textField.__width = 4;
 						textField.__height = 4;

@@ -295,6 +295,9 @@ class TextFieldTest {
 		
 		Assert.areEqual (1, textField.numLines);
 		
+		textField.text = "Hello\n\rWorld";
+		
+		Assert.areEqual (3, textField.numLines);
 	}
 	
 	

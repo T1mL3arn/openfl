@@ -104,7 +104,6 @@ class CanvasTextField {
 					
 					context.textAlign = "start";
 					context.fillText (line, 2 + offsetX, 2 + yOffset/*, textField.__width - 4*/);
-					
 			}
 			
 			yOffset += format.size * 1.185;

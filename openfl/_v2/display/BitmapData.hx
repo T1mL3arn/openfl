@@ -2,6 +2,7 @@ package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
 
 
 import haxe.io.Bytes;
+import haxe.Int32;
 import openfl.filters.BitmapFilter;
 import openfl.geom.ColorTransform;
 import openfl.geom.Matrix;
@@ -227,7 +228,17 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	public function getPixel32 (x:Int, y:Int):Int {
+	public function getPixel32 (x:Int, y:Int):Int32 {
+		
+		#if neko
+		if (transparent) {
+			
+			var pixels = getPixels (new Rectangle (x, y, 1, 1));
+			pixels.position = 0;
+			return pixels.readUnsignedInt ();
+			
+		}
+		#end
 		
 		return lime_bitmap_data_get_pixel32 (__handle, x, y);
 		
@@ -255,7 +266,7 @@ class BitmapData implements IBitmapDrawable {
 			
 			v = data.readInt ();
 			data.position = i << 2;
-			data.writeInt ((((v >>> 8) & 0xFF) << 0) | (((v >>> 16) & 0xFF) << 8) | (((v >>> 24) & 0xFF) << 16) | (((v >>> 0) & 0xFF) << 24));
+			data.writeInt ((((v >>> 0) & 0xFF) << 8) | (((v >>> 8) & 0xFF) << 16) | (((v >>> 16) & 0xFF) << 24) | (((v >>> 24) & 0xFF) << 0));
 			
 		}
 		
@@ -317,6 +328,53 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
+	public function merge (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redMultiplier:UInt, greenMultiplier:UInt, blueMultiplier:UInt, alphaMultiplier:UInt):Void {
+		
+		if (sourceBitmapData == null) return;
+		
+		var sw:Int = Std.int (sourceRect.width);
+		var sh:Int = Std.int (sourceRect.height);
+		
+		var sourcePixels = sourceBitmapData.getPixels (sourceRect);
+		if (sourcePixels == null) return;
+		sourcePixels.position = 0;
+		
+		var destRect = new Rectangle (destPoint.x, destPoint.y, sw, sh);
+		var destPixels = getPixels (destRect);
+		if (destPixels == null) return;
+		destPixels.position = 0;
+		
+		var sourcePixel:Int, destPixel:Int, r:Int, g:Int, b:Int, a:Int, color:Int, c1:Int, c2:Int, c3:Int, c4:Int;
+		
+		for (i in 0...(sh * sw)) {
+			
+			sourcePixel = sourcePixels.readUnsignedInt ();
+			destPixel = destPixels.readUnsignedInt ();
+			
+			a = Std.int (((((sourcePixel >> 24) & 0xFF) * redMultiplier) + (((destPixel >> 24) & 0xFF) * (256 - redMultiplier))) / 256);
+			r = Std.int (((((sourcePixel >> 16) & 0xFF) * redMultiplier) + (((destPixel >> 16) & 0xFF) * (256 - redMultiplier))) / 256);
+			g = Std.int (((((sourcePixel >> 8) & 0xFF) * redMultiplier) + (((destPixel >> 8) & 0xFF) * (256 - redMultiplier))) / 256);
+			b = Std.int ((((sourcePixel & 0xFF) * redMultiplier) + ((destPixel & 0xFF) * (256 - redMultiplier))) / 256);
+			
+			if (a > 255 || r > 255 || g > 255 || b > 255) {
+				
+				trace (a + ", " + r + ", " + g + ", " + b);
+				
+			}
+			
+			color = a << 24 | r << 16 | g << 8 | b;
+			
+			destPixels.position = i * 4;
+			destPixels.writeUnsignedInt (color);
+			
+		}
+		
+		destPixels.position = 0;
+		setPixels (destRect, destPixels);
+		
+	}
+	
+	
 	public function multiplyAlpha ():Void {
 		
 		lime_bitmap_data_multiply_alpha (__handle);
@@ -336,7 +394,7 @@ class BitmapData implements IBitmapDrawable {
 		var sw:Int = Std.int (sourceRect.width);
 		var sh:Int = Std.int (sourceRect.height);
 		
-		var pixels = getPixels (sourceRect);
+		var pixels = sourceBitmapData.getPixels (sourceRect);
 		pixels.position = 0;
 		
 		var pixelValue:Int, r:Int, g:Int, b:Int, a:Int, color:Int, c1:Int, c2:Int, c3:Int, c4:Int;
@@ -733,7 +791,7 @@ class BitmapData implements IBitmapDrawable {
 	private static var lime_bitmap_data_fill = Lib.load ("lime", "lime_bitmap_data_fill", 4);
 	private static var lime_bitmap_data_get_pixels = Lib.load ("lime", "lime_bitmap_data_get_pixels", 2);
 	private static var lime_bitmap_data_get_pixel = Lib.load ("lime", "lime_bitmap_data_get_pixel", 3);
-	private static var lime_bitmap_data_get_pixel32 = Lib.load ("lime", "lime_bitmap_data_get_pixel32", 3);
+	private static var lime_bitmap_data_get_pixel32:Dynamic -> Int -> Int -> Int32 = Lib.load ("lime", "lime_bitmap_data_get_pixel32", 3);
 	private static var lime_bitmap_data_get_pixel_rgba = Lib.load ("lime", "lime_bitmap_data_get_pixel_rgba", 3);
 	#if cpp
 	private static var lime_bitmap_data_get_array = Lib.load ("lime", "lime_bitmap_data_get_array", 3);

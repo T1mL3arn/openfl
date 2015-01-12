@@ -161,7 +161,14 @@ class BitmapData implements IBitmapDrawable {
 			this.height = height;
 			rect = new Rectangle (0, 0, width, height);
 			
-			if (!transparent) {
+			if (transparent) {
+
+				if ((fillColor & 0xFF000000) == 0) {				
+					fillColor = 0;
+				}
+                
+			}
+			else {
 				
 				fillColor = (0xFF << 24) | (fillColor & 0xFFFFFF);
 				
@@ -907,6 +914,14 @@ class BitmapData implements IBitmapDrawable {
 	public function lock ():Void {
 		
 		
+		
+	}
+	
+	
+	public function merge (sourceBitmapData:BitmapData, sourceRect:Rectangle, destPoint:Point, redMultiplier:UInt, greenMultiplier:UInt, blueMultiplier:UInt, alphaMultiplier:UInt):Void {
+		
+		if (!__isValid || sourceBitmapData == null || !sourceBitmapData.__isValid || sourceRect == null || destPoint == null) return;
+		__image.merge (sourceBitmapData.__image, sourceRect.__toLimeRectangle (), destPoint.__toLimeVector2 (), redMultiplier, greenMultiplier, blueMultiplier, alphaMultiplier);
 		
 	}
 	

@@ -93,17 +93,17 @@ class CanvasTextField {
 				case TextFormatAlign.CENTER:
 					
 					context.textAlign = "center";
-					context.fillText (line, textField.__width / 2, 2 + yOffset, textField.__width - 4);
+					context.fillText (line, textField.__width / 2, 2 + yOffset/*, textField.__width - 4*/);
 					
 				case TextFormatAlign.RIGHT:
 					
 					context.textAlign = "end";
-					context.fillText (line, textField.__width - 2, 2 + yOffset, textField.__width - 4);
+					context.fillText (line, textField.__width - 2, 2 + yOffset/*, textField.__width - 4*/);
 					
 				default:
 					
 					context.textAlign = "start";
-					context.fillText (line, 2 + offsetX, 2 + yOffset, textField.__width - 4);
+					context.fillText (line, 2 + offsetX, 2 + yOffset/*, textField.__width - 4*/);
 			}
 			
 			yOffset += format.size * 1.185;

@@ -179,7 +179,7 @@ class BitmapData implements IBitmapDrawable {
 			__isValid = true;
 			
 		}
-		
+		//__clipRect = new Rectangle(0, 0, width, height);
 		__createUVs ();
 		
 	}
@@ -490,6 +490,8 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return;
 		
+		//if (clipRect != null) __clipRect.copyFrom(clipRect);
+		
 		switch (__image.type) {
 			
 			case CANVAS:
@@ -504,13 +506,18 @@ class BitmapData implements IBitmapDrawable {
 				renderSession.context = buffer.__srcContext;
 				renderSession.roundPixels = true;
 				
-				if (!smoothing) {
-					
-					untyped (buffer.__srcContext).mozImageSmoothingEnabled = false;
-					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = false;
-					buffer.__srcContext.imageSmoothingEnabled = false;
-					
-				}
+				//if (!smoothing) {
+					//
+					//untyped (buffer.__srcContext).mozImageSmoothingEnabled = false;
+					//untyped (buffer.__srcContext).webkitImageSmoothingEnabled = false;
+					//buffer.__srcContext.imageSmoothingEnabled = false;
+					//
+				//} else
+				//{
+					untyped (buffer.__srcContext).mozImageSmoothingEnabled = smoothing;
+					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = smoothing;
+					buffer.__srcContext.imageSmoothingEnabled = smoothing;
+				//}
 				
 				var matrixCache = source.__worldTransform;
 				source.__worldTransform = matrix != null ? matrix : new Matrix ();
@@ -519,13 +526,14 @@ class BitmapData implements IBitmapDrawable {
 				source.__worldTransform = matrixCache;
 				source.__updateChildren (true);
 				
-				if (!smoothing) {
-					
-					untyped (buffer.__srcContext).mozImageSmoothingEnabled = true;
-					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = true;
-					buffer.__srcContext.imageSmoothingEnabled = true;
-					
-				}
+				//if (!smoothing) {
+					//
+					//untyped (buffer.__srcContext).mozImageSmoothingEnabled = true;
+					//untyped (buffer.__srcContext).webkitImageSmoothingEnabled = true;
+					//buffer.__srcContext.imageSmoothingEnabled = true;
+					//
+				//}
+				//if (clipRect != null) __clipRect.setTo(0, 0, width, height);
 				
 				buffer.__srcContext.setTransform (1, 0, 0, 1, 0, 0);
 				#end
@@ -1542,7 +1550,8 @@ class BitmapData implements IBitmapDrawable {
 		
 	}
 	
-	
+	//@:noCompletion @:dox(hide) private var __clipRect:Rectangle = null;
+	//@:noCompletion @:dox(hide) private var __clipRect:Rectangle = null;
 	@:noCompletion @:dox(hide) public function __renderCanvas (renderSession:RenderSession):Void {
 		
 		#if js
@@ -1567,7 +1576,10 @@ class BitmapData implements IBitmapDrawable {
 			
 		}
 		
-		context.drawImage (__image.buffer.src, 0, 0);
+		//if (__clipRect.width <= 0 || __clipRect.height <= 0)
+			context.drawImage (__image.buffer.src, 0, 0);
+		//else
+			//context.drawImage (__image.buffer.src, 0, 0, __clipRect.width, __clipRect.height, __clipRect.x, __clipRect.y, __clipRect.width, __clipRect.height);
 		#end
 		
 	}

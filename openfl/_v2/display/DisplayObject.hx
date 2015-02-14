@@ -1,4 +1,4 @@
-package openfl._v2.display; #if (!flash && !html5 && !openfl_next)
+package openfl._v2.display; #if lime_legacy
 
 
 import openfl.events.Event;
@@ -72,7 +72,7 @@ import openfl.Lib;
 		if (event.__getIsCancelled ())
 			return true;
 		
-		if (event.bubbles && parent != null) {
+		if (event.bubbles && parent != null && parent != this) {
 			
 			parent.dispatchEvent (event);
 			

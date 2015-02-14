@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if (display || openfl_next || js)
+package openfl.display; #if !flash #if !lime_legacy
 
 
 import lime.graphics.opengl.GLBuffer;
@@ -28,15 +28,6 @@ import js.html.ImageElement;
 import js.html.Uint8ClampedArray;
 import js.Browser;
 #end
-
-@:access(lime.graphics.Image)
-@:access(lime.graphics.ImageBuffer)
-@:access(lime.math.Rectangle)
-@:access(openfl.geom.ColorTransform)
-@:access(openfl.geom.Point)
-@:access(openfl.geom.Rectangle)
-
-@:autoBuild(openfl.Assets.embedBitmap())
 
 
 /**
@@ -96,6 +87,17 @@ import js.Browser;
  * it can only be 2,048 pixels high.) In Flash Player 9 and earlier, the limitation 
  * is 2,880 pixels in height and 2,880 in width.</p>
  */
+
+@:access(lime.graphics.Image)
+@:access(lime.graphics.ImageBuffer)
+@:access(lime.math.Rectangle)
+@:access(openfl.geom.ColorTransform)
+@:access(openfl.geom.Point)
+@:access(openfl.geom.Rectangle)
+
+@:autoBuild(openfl.Assets.embedBitmap())
+
+
 class BitmapData implements IBitmapDrawable {
 	
 	
@@ -503,7 +505,7 @@ class BitmapData implements IBitmapDrawable {
 				var buffer = __image.buffer;
 				
 				var renderSession = new RenderSession ();
-				renderSession.context = buffer.__srcContext;
+				renderSession.context = cast buffer.__srcContext;
 				renderSession.roundPixels = true;
 				
 				//if (!smoothing) {
@@ -874,11 +876,12 @@ class BitmapData implements IBitmapDrawable {
 	public function getVector (rect:Rectangle) {
 		
 		var pixels = getPixels (rect);
-		var result = new Vector<UInt> ();
+		var length = Std.int (pixels.length / 4);
+		var result = new Vector<UInt> (length, true);
 		
-		for (i in 0...Std.int (pixels.length / 4)) {
+		for (i in 0...length) {
 			
-			result.push (pixels.readUnsignedInt ());
+			result[i] = pixels.readUnsignedInt ();
 			
 		}
 		

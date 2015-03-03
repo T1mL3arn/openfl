@@ -144,15 +144,36 @@ class CanvasTextField {
 				context = textField.__context;
 				
 				if (textField.__text != null && textField.__text != "") {
-					
+									
 					var fullAutoSize = !textField.wordWrap && textField.autoSize != TextFieldAutoSize.NONE;
-					
 					var measurements = [];
 					var textWidth = 0.0;
+					var text:String = null;
 					
 					if (textField.wordWrap)
 					{
 						textField.__buildWrappedText ();
+						text = textField.__wrappedText;
+					}
+					else
+						text = textField.text;
+					
+					if (textField.displayAsPassword) {
+						
+						var length = text.length;
+						var mask = "";
+						
+						for (i in 0...length) {
+							var char = text.charAt(i);
+							if (char != '\n')
+								mask += "*";
+							else
+								mask += '\n'
+							
+						}
+						
+						text = mask;
+						
 					}
 					
 					if (textField.wordWrap && textField.autoSize != TextFieldAutoSize.NONE)
@@ -207,12 +228,29 @@ class CanvasTextField {
 						
 					}
 					
+					if (textField.__hasFocus && (textField.__selectionStart == textField.__cursorPosition) && textField.__showCursor) {
+						
+						var cursorOffset = textField.__getTextWidth (text.substring (0, textField.__cursorPosition));
+						context.fillStyle = "#" + StringTools.hex (textField.__textFormat.color, 6);
+						context.fillRect (cursorOffset, 5, 1, textField.__textFormat.size - 5);
+						
+					} else if (textField.__hasFocus && (Math.abs (textField.__selectionStart - textField.__cursorPosition)) > 0 && !textField.__isKeyDown) {
+						
+						var lowPos = Std.int (Math.min (textField.__selectionStart, textField.__cursorPosition));
+						var highPos = Std.int (Math.max (textField.__selectionStart, textField.__cursorPosition));
+						var xPos = textField.__getTextWidth (text.substring (0, lowPos));
+						var widthPos = textField.__getTextWidth (text.substring (lowPos, highPos));
+						
+						context.fillStyle = "#" + StringTools.hex (textField.__textFormat.color, 6);
+						context.fillRect (xPos, 5, widthPos, textField.__textFormat.size - 5);
+						
+					}
+					
 					// then draw text
 					if (textField.__ranges == null) {
 						
-						if (!textField.wordWrap)	renderText (textField, textField.text, textField.__textFormat, 0);
-						else						renderText (textField, textField.__wrappedText, textField.__textFormat, 0);
-							
+						renderText (textField, text, textField.__textFormat, 0);
+					
 					} else {
 						
 						var currentIndex = 0;
@@ -225,7 +263,7 @@ class CanvasTextField {
 							
 							range = textField.__ranges[i];
 							
-							renderText (textField, textField.text.substring (range.start, range.end), range.format, offsetX);
+							renderText (textField, text.substring (range.start, range.end), range.format, offsetX);
 							offsetX += measurements[i];
 							
 						}

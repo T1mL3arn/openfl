@@ -168,7 +168,7 @@ class CanvasTextField {
 							if (char != '\n')
 								mask += "*";
 							else
-								mask += '\n'
+								mask += '\n';
 							
 						}
 						

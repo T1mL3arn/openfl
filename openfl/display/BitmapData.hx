@@ -512,14 +512,13 @@ class BitmapData implements IBitmapDrawable {
 					//
 					//untyped (buffer.__srcContext).mozImageSmoothingEnabled = false;
 					//untyped (buffer.__srcContext).webkitImageSmoothingEnabled = false;
-					//buffer.__srcContext.imageSmoothingEnabled = false;
+					//untyped (buffer.__srcContext).imageSmoothingEnabled = false;
 					//
-				//} else
-				//{
-					untyped (buffer.__srcContext).mozImageSmoothingEnabled = smoothing;
-					untyped (buffer.__srcContext).webkitImageSmoothingEnabled = smoothing;
-					buffer.__srcContext.imageSmoothingEnabled = smoothing;
 				//}
+				
+				untyped (buffer.__srcContext).mozImageSmoothingEnabled = smoothing;
+				untyped (buffer.__srcContext).webkitImageSmoothingEnabled = smoothing;
+				untyped (buffer.__srcContext).imageSmoothingEnabled = smoothing;
 				
 				var matrixCache = source.__worldTransform;
 				source.__worldTransform = matrix != null ? matrix : new Matrix ();
@@ -532,7 +531,7 @@ class BitmapData implements IBitmapDrawable {
 					//
 					//untyped (buffer.__srcContext).mozImageSmoothingEnabled = true;
 					//untyped (buffer.__srcContext).webkitImageSmoothingEnabled = true;
-					//buffer.__srcContext.imageSmoothingEnabled = true;
+					//untyped (buffer.__srcContext).imageSmoothingEnabled = true;
 					//
 				//}
 				//if (clipRect != null) __clipRect.setTo(0, 0, width, height);

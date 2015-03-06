@@ -2,14 +2,13 @@ package openfl; #if !lime_legacy
 #if !macro
 
 
+import lime.app.Application;
 import lime.system.System;
-import openfl.display.Application;
 import openfl.display.MovieClip;
 import openfl.display.Stage;
 import openfl.net.URLRequest;
 
 #if js
-import js.html.HtmlElement;
 import js.Browser;
 #end
 

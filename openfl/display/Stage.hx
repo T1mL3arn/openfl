@@ -19,6 +19,7 @@ import openfl._internal.renderer.AbstractRenderer;
 import openfl._internal.renderer.canvas.CanvasRenderer;
 import openfl._internal.renderer.dom.DOMRenderer;
 import openfl._internal.renderer.opengl.GLRenderer;
+import openfl.display.DisplayObjectContainer;
 import openfl.events.Event;
 import openfl.events.EventPhase;
 import openfl.events.FocusEvent;
@@ -160,7 +161,7 @@ import js.Browser;
 @:access(openfl.events.Event)
 
 
-class Stage extends Sprite implements IModule {
+class Stage extends DisplayObjectContainer implements IModule {
 	
 	
 	/**

@@ -1,4 +1,4 @@
-package openfl.text; #if !flash #if !lime_legacy
+package openfl.text; #if !flash #if !openfl_legacy
 
 
 import lime.text.Font in LimeFont;
@@ -107,8 +107,8 @@ class Font extends LimeFont {
 	@:noCompletion private static function __fromLimeFont (value:LimeFont):Font {
 		
 		var font = new Font ();
-		font.__fontPath = value.__fontPath;
-		font.__handle = value.__handle;
+		font.name = value.name;
+		font.src = value.src;
 		return font;
 		
 	}
@@ -393,7 +393,7 @@ typedef GlyphData = {
 
 
 #else
-typedef Font = openfl._v2.text.Font;
+typedef Font = openfl._legacy.text.Font;
 #end
 #else
 typedef Font = flash.text.Font;

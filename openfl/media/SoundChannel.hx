@@ -1,4 +1,4 @@
-package openfl.media; #if !flash #if !lime_legacy
+package openfl.media; #if !flash #if !openfl_legacy
 
 
 import lime.audio.AudioSource;
@@ -65,6 +65,9 @@ class SoundChannel extends EventDispatcher {
 	private function new (#if !html5 source:AudioSource #else soundInstance:SoundJSInstance #end = null):Void {
 		
 		super (this);
+		
+		leftPeak = 1;
+		rightPeak = 1;
 		
 		#if !html5
 			
@@ -219,7 +222,7 @@ class SoundChannel extends EventDispatcher {
 
 
 #else
-typedef SoundChannel = openfl._v2.media.SoundChannel;
+typedef SoundChannel = openfl._legacy.media.SoundChannel;
 #end
 #else
 typedef SoundChannel = flash.media.SoundChannel;

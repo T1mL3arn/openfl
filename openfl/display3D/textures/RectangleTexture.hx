@@ -47,7 +47,7 @@ class RectangleTexture extends TextureBase {
 		
 		// TODO: Support upload from UInt8Array directly
 		
-		#if lime_legacy
+		#if openfl_legacy
 		var p = BitmapData.getRGBAPixels (bitmapData);
 		#elseif js
 		var p = ByteArray.__ofBuffer (@:privateAccess (bitmapData.__image).data.buffer);
@@ -67,7 +67,7 @@ class RectangleTexture extends TextureBase {
 		
 		GL.bindTexture (GL.TEXTURE_2D, glTexture);
 		
-		#if (js && html5)
+		#if js
 			
 			if (optimizeForRenderToTexture)
 				GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, 1);

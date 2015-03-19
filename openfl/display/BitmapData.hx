@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 import lime.graphics.opengl.GLBuffer;
@@ -180,6 +180,12 @@ class BitmapData implements IBitmapDrawable {
 			__image.transparent = transparent;
 			__isValid = true;
 			
+		} else {
+			
+			this.width = 0;
+			this.height = 0;
+			rect = new Rectangle ();
+			
 		}
 		//__clipRect = new Rectangle(0, 0, width, height);
 		__createUVs ();
@@ -259,6 +265,8 @@ class BitmapData implements IBitmapDrawable {
 	 * @param	colorTransform		A ColorTransform object that describes the color transformation values to apply.
 	 */
 	public function colorTransform (rect:Rectangle, colorTransform:ColorTransform):Void {
+		
+		if (!__isValid) return;
 		
 		__image.colorTransform (rect.__toLimeRectangle (), colorTransform.__toLimeColorMatrix ());
 		
@@ -835,6 +843,8 @@ class BitmapData implements IBitmapDrawable {
 	
 	public function getTexture (gl:GLRenderContext):GLTexture {
 		
+		if (!__isValid) return null;
+		
 		if (__texture == null) {
 			
 			__texture = gl.createTexture ();
@@ -849,10 +859,11 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (__image.dirty) {
 			
+			var format = (__image.buffer.bitsPerPixel == 1 ? gl.ALPHA : gl.RGBA);
 			gl.bindTexture (gl.TEXTURE_2D, __texture);
 			var textureImage = __image.clone ();
 			textureImage.premultiplied = true;
-			gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, textureImage.data);
+			gl.texImage2D (gl.TEXTURE_2D, 0, format, width, height, 0, format, gl.UNSIGNED_BYTE, textureImage.data);
 			gl.bindTexture (gl.TEXTURE_2D, null);
 			__image.dirty = false;
 			
@@ -1693,7 +1704,7 @@ class BitmapData implements IBitmapDrawable {
 
 
 #else
-typedef BitmapData = openfl._v2.display.BitmapData;
+typedef BitmapData = openfl._legacy.display.BitmapData;
 #end
 #else
 typedef BitmapData = flash.display.BitmapData;

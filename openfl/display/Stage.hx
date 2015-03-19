@@ -1,4 +1,4 @@
-package openfl.display; #if !flash #if !lime_legacy
+package openfl.display; #if !flash #if !openfl_legacy
 
 
 import haxe.EnumFlags;
@@ -12,6 +12,9 @@ import lime.graphics.GLRenderContext;
 import lime.graphics.RenderContext;
 import lime.math.Matrix4;
 import lime.utils.GLUtils;
+import lime.ui.Gamepad;
+import lime.ui.GamepadAxis;
+import lime.ui.GamepadButton;
 import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.ui.Mouse;
@@ -636,22 +639,51 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
+	public function onGamepadAxisMove (gamepad:Gamepad, axis:GamepadAxis, value:Float):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadButtonDown (gamepad:Gamepad, button:GamepadButton):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadButtonUp (gamepad:Gamepad, button:GamepadButton):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadConnect (gamepad:Gamepad):Void {
+		
+		
+		
+	}
+	
+	
+	public function onGamepadDisconnect (gamepad:Gamepad):Void {
+		
+		
+		
+	}
+	
+	
 	public function onKeyDown (keyCode:KeyCode, modifier:KeyModifier):Void {
 		
-		var keyCode = __convertKeyCode (keyCode);
-		var charCode = keyCode;
-		
-		__onKey (new KeyboardEvent (KeyboardEvent.KEY_DOWN, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey));
+		__onKey (KeyboardEvent.KEY_DOWN, keyCode, modifier);
 		
 	}
 	
 	
 	public function onKeyUp (keyCode:KeyCode, modifier:KeyModifier):Void {
 		
-		var keyCode = __convertKeyCode (keyCode);
-		var charCode = keyCode;
-		
-		__onKey (new KeyboardEvent (KeyboardEvent.KEY_UP, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey));
+		__onKey (KeyboardEvent.KEY_UP, keyCode, modifier);
 		
 	}
 	
@@ -695,7 +727,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public function onMouseWheel (deltaX:Float, deltaY:Float):Void {
 		
-		
+		__onMouseWheel (deltaX, deltaY);
 		
 	}
 	
@@ -1211,7 +1243,12 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
-	@:noCompletion private function __onKey (event:KeyboardEvent):Void {
+	@:noCompletion private function __onKey (type:String, keyCode:KeyCode, modifier:KeyModifier):Void {
+		
+		MouseEvent.__altKey = modifier.altKey;
+		MouseEvent.__commandKey = modifier.metaKey;
+		MouseEvent.__ctrlKey = modifier.ctrlKey;
+		MouseEvent.__shiftKey = modifier.shiftKey;
 		
 		var stack = new Array <DisplayObject> ();
 		
@@ -1226,6 +1263,11 @@ class Stage extends DisplayObjectContainer implements IModule {
 		}
 		
 		if (stack.length > 0) {
+			
+			var keyCode = __convertKeyCode (keyCode);
+			var charCode = keyCode;
+			
+			var event = new KeyboardEvent (type, true, false, charCode, keyCode, null, modifier.ctrlKey, modifier.altKey, modifier.shiftKey, modifier.metaKey);
 			
 			stack.reverse ();
 			__fireEvent (event, stack);
@@ -1257,7 +1299,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 		}
 		
-		__fireEvent (MouseEvent.__create (type, button, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+		__fireEvent (MouseEvent.__create (type, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 		
 		var clickType = switch (type) {
 			
@@ -1270,14 +1312,14 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		if (clickType != null) {
 			
-			__fireEvent (MouseEvent.__create (clickType, button, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+			__fireEvent (MouseEvent.__create (clickType, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 			
 			if (type == MouseEvent.MOUSE_UP && cast (target, openfl.display.InteractiveObject).doubleClickEnabled) {
 				
 				var currentTime = Lib.getTimer ();
 				if (currentTime - __lastClickTime < 500) {
 					
-					__fireEvent (MouseEvent.__create (MouseEvent.DOUBLE_CLICK, button, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
+					__fireEvent (MouseEvent.__create (MouseEvent.DOUBLE_CLICK, button, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target), stack);
 					__lastClickTime = 0;
 					
 				} else {
@@ -1381,6 +1423,28 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
+	@:noCompletion private function __onMouseWheel (deltaX:Float, deltaY:Float):Void {
+		
+		var x = __mouseX;
+		var y = __mouseY;
+		
+		var stack = [];
+		
+		if (!__hitTest (x, y, false, stack, true)) {
+			
+			stack = [ this ];
+			
+		}
+		
+		var target:InteractiveObject = cast stack[stack.length - 1];
+		var targetPoint = new Point (x, y);
+		var delta = Std.int (deltaY);
+		
+		__fireEvent (MouseEvent.__create (MouseEvent.MOUSE_WHEEL, 0, __mouseX, __mouseY, (target == this ? targetPoint : target.globalToLocal (targetPoint)), target, delta), stack);
+		
+	}
+	
+	
 	@:noCompletion private function __onTouch (type:String, x:Float, y:Float, id:Int):Void {
 		
 		/*event.preventDefault ();
@@ -1421,12 +1485,12 @@ class Stage extends DisplayObjectContainer implements IModule {
 			var target = __stack[__stack.length - 1];
 			var localPoint = target.globalToLocal (point);
 			
-			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, localPoint, cast target);
+			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, __mouseX, __mouseY, localPoint, cast target);
 			touchEvent.touchPointID = id;
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, 0, localPoint, cast target);
+			var mouseEvent = MouseEvent.__create (mouseType, 0, __mouseX, __mouseY, localPoint, cast target);
 			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
 			
 			__fireEvent (touchEvent, __stack);
@@ -1434,12 +1498,12 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 		} else {
 			
-			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, point, this);
+			var touchEvent = TouchEvent.__create (type, /*event,*/ null/*touch*/, __mouseX, __mouseY, point, this);
 			touchEvent.touchPointID = id;
 			//touchEvent.isPrimaryTouchPoint = isPrimaryTouchPoint;
 			touchEvent.isPrimaryTouchPoint = true;
 			
-			var mouseEvent = MouseEvent.__create (mouseType, 0, point, this);
+			var mouseEvent = MouseEvent.__create (mouseType, 0, __mouseX, __mouseY, point, this);
 			mouseEvent.buttonDown = (type != TouchEvent.TOUCH_END);
 			
 			__fireEvent (touchEvent, [ stage ]);
@@ -1761,7 +1825,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 
 
 #else
-typedef Stage = openfl._v2.display.Stage;
+typedef Stage = openfl._legacy.display.Stage;
 #end
 #else
 typedef Stage = flash.display.Stage;

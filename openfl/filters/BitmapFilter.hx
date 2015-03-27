@@ -50,7 +50,13 @@ class BitmapFilter {
 	}
 	#end
 	
-	
+	#if js
+	@:noCompletion public function __applyFilter2 (sourceData:ImageData):Void {
+		
+		
+		
+	}
+	#end
 }
 
 

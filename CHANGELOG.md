@@ -1,3 +1,46 @@
+3.0.0-beta.3 (03/26/2015)
+-------------------------
+
+* Updated for Lime 2.3
+* Improved handling of default framebuffer on iOS
+* Fixed mapping of the meta/command key
+* Fixed System.exit
+
+
+3.0.0-beta.2 (03/25/2015)
+-------------------------
+
+* Added support for default fonts in GL TextField
+* Fixed an issue when unserializing SharedObjects
+* Fixed an issue when embedding images
+* Fixed builds when using "-Dlegacy" with the HTML5 target
+* Fixed the GL window background color
+
+
+3.0.0-beta (03/20/2015)
+-----------------------
+
+_Legacy OpenFL v2 behavior is available using -Dv2 or -Dlegacy_
+
+* Added support for Haxe 3.2
+* Added support for using OpenFL as a Lime module
+* Added initial support for GL colorTransform
+* Added initial support for GL masks
+* Added initial support for OpenGL BitmapData.draw
+* Added initial OpenGL TextField support
+* Added fullscreen toggle support
+* Implemented key modifiers for mouse events
+* Implemented support for mouse wheel events
+* Implemented Sound.fromFile
+* Made drawTiles respect the parent (x, y) position
+* Made drawTiles respect the parent alpha value
+* Made Stage inherit from DisplayObjectContainer, not Sprite
+* Fixed the implied (0, 0) start position in Graphics
+* Fixed line thickness evaluation in Graphics
+* Fixed an issue with SoundChannel peak in Neko
+* Improved support for node.js
+
+
 2.2.8 (03/02/2015)
 ------------------
 

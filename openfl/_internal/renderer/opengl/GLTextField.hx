@@ -62,9 +62,13 @@ class GLTextField {
 			
 		}
 		
-		for (i in 0...textField.__tilesheets.length) {
+		if (textField.__tilesheets != null) {
 			
-			graphics.drawTiles (textField.__tilesheets[i], textField.__tileData[i], true, Tilesheet.TILE_RGB);
+			for (i in 0...textField.__tilesheets.length) {
+				
+				graphics.drawTiles (textField.__tilesheets[i], textField.__tileData[i], true, Tilesheet.TILE_RGB);
+				
+			}
 			
 		}
 		
@@ -195,7 +199,7 @@ class GLTextField {
 			}
 			
 			var offsetY = 0;
-			var lines = text.split("\n");
+			var lines = text.split ("\n");
 			
 			if (textField.__textLayout == null) {
 				
@@ -232,6 +236,7 @@ class GLTextField {
 					
 				}
 				
+				x = 0;
 				y += size * 1.185;
 				
 			}

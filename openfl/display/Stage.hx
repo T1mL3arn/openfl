@@ -278,7 +278,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	 *                       <code>allowFullScreen</code> attribute is not set to
 	 *                       <code>true</code> throws a security error.
 	 */
-	public var displayState (default, set):StageDisplayState;
+	public var displayState (get, set):StageDisplayState;
 	
 	/**
 	 * The interactive object with keyboard focus; or <code>null</code> if focus
@@ -519,6 +519,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 	@:noCompletion private var __colorSplit:Array<Float>;
 	@:noCompletion private var __colorString:String;
 	@:noCompletion private var __dirty:Bool;
+	@:noCompletion private var __displayState:StageDisplayState;
 	@:noCompletion private var __dragBounds:Rectangle;
 	@:noCompletion private var __dragObject:Sprite;
 	@:noCompletion private var __dragOffsetX:Float;
@@ -564,6 +565,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		this.name = null;
 		
+		__displayState = NORMAL;
 		__mouseX = 0;
 		__mouseY = 0;
 		
@@ -574,7 +576,6 @@ class Stage extends DisplayObjectContainer implements IModule {
 		
 		align = StageAlign.TOP_LEFT;
 		allowsFullScreen = false;
-		displayState = StageDisplayState.NORMAL;
 		frameRate = 60;
 		quality = StageQuality.HIGH;
 		scaleMode = StageScaleMode.NO_SCALE;
@@ -598,7 +599,23 @@ class Stage extends DisplayObjectContainer implements IModule {
 	
 	public function init (context:RenderContext):Void {
 		
-		
+		switch (context) {
+			
+			case OPENGL (gl):
+				
+				__renderer = new GLRenderer (stageWidth, stageHeight, gl);
+			
+			case CANVAS (context):
+				
+				__renderer = new CanvasRenderer (stageWidth, stageHeight, context);
+			
+			case DOM (element):
+				
+				__renderer = new DOMRenderer (stageWidth, stageHeight, element);
+			
+			default:
+			
+		}
 		
 	}
 	
@@ -703,9 +720,16 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
-	public function onMouseMove (x:Float, y:Float, button:Int):Void {
+	public function onMouseMove (x:Float, y:Float):Void {
 		
 		__onMouse (MouseEvent.MOUSE_MOVE, x, y, 0);
+		
+	}
+	
+	
+	public function onMouseMoveRelative (x:Float, y:Float):Void {
+		
+		
 		
 	}
 	
@@ -804,6 +828,20 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
+	public function onWindowFullscreen ():Void {
+		
+		
+		
+	}
+	
+	
+	public function onWindowMinimize ():Void {
+		
+		
+		
+	}
+	
+	
 	public function onWindowMove (x:Float, y:Float):Void {
 		
 		
@@ -816,8 +854,21 @@ class Stage extends DisplayObjectContainer implements IModule {
 		stageWidth = width;
 		stageHeight = height;
 		
+		if (__renderer != null) {
+			
+			__renderer.resize (width, height);
+			
+		}
+		
 		var event = new Event (Event.RESIZE);
 		__broadcast (event, false);
+		
+	}
+	
+	
+	public function onWindowRestore ():Void {
+		
+		
 		
 	}
 	
@@ -839,39 +890,9 @@ class Stage extends DisplayObjectContainer implements IModule {
 		__renderable = true;
 		__update (false, true);
 		
-		switch (context) {
+		if (__renderer != null) {
 			
-			case OPENGL (gl):
-				
-				if (__renderer == null) {
-					
-					__renderer = new GLRenderer (stageWidth, stageHeight, gl);
-					
-				}
-				
-				__renderer.render (this);
-			
-			case CANVAS (context):
-				
-				if (__renderer == null) {
-					
-					__renderer = new CanvasRenderer (stageWidth, stageHeight, context);
-					
-				}
-				
-				__renderer.render (this);
-			
-			case DOM (element):
-				
-				if (__renderer == null) {
-					
-					__renderer = new DOMRenderer (stageWidth, stageHeight, element);
-					
-				}
-				
-				__renderer.render (this);
-			
-			default:
+			__renderer.render (this);
 			
 		}
 		
@@ -1095,11 +1116,11 @@ class Stage extends DisplayObjectContainer implements IModule {
 			case LEFT_CTRL: Keyboard.CONTROL;
 			case LEFT_SHIFT: Keyboard.SHIFT;
 			case LEFT_ALT: Keyboard.ALTERNATE;
-			//case LEFT_META: 0x400000E3;
+			case LEFT_META: Keyboard.COMMAND;
 			case RIGHT_CTRL: Keyboard.CONTROL;
 			case RIGHT_SHIFT: Keyboard.SHIFT;
 			case RIGHT_ALT: Keyboard.ALTERNATE;
-			//case RIGHT_META: 0x400000E7;
+			case RIGHT_META: Keyboard.COMMAND;
 			//case MODE: 0x40000101;
 			//case AUDIO_NEXT: 0x40000102;
 			//case AUDIO_PREVIOUS: 0x40000103;
@@ -1271,6 +1292,34 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 			stack.reverse ();
 			__fireEvent (event, stack);
+			
+			#if (windows || linux)
+			
+			if (keyCode == KeyCode.RETURN && modifier.altKey && type == KeyboardEvent.KEY_DOWN && !modifier.ctrlKey && !modifier.shiftKey && !modifier.metaKey && !event.isDefaultPrevented ()) {
+				
+				switch (displayState) {
+					
+					case NORMAL: displayState = FULL_SCREEN;
+					default: displayState = NORMAL;
+					
+				}
+				
+			}
+			
+			#elseif mac
+			
+			if (keyCode == KeyCode.F && modifier.ctrlKey && modifier.metaKey && type == KeyboardEvent.KEY_DOWN && !modifier.altKey && !modifier.shiftKey && !event.isDefaultPrevented ()) {
+				
+				switch (displayState) {
+					
+					case NORMAL: displayState = FULL_SCREEN;
+					default: displayState = NORMAL;
+					
+				}
+				
+			}
+			
+			#end
 			
 		}
 		
@@ -1622,13 +1671,13 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
-	@:noCompletion public override function __update (transformOnly:Bool, updateChildren:Bool):Void {
+	@:noCompletion public override function __update (transformOnly:Bool, updateChildren:Bool, ?maskGrahpics:Graphics = null):Void {
 		
 		if (transformOnly) {
 			
 			if (DisplayObject.__worldTransformDirty > 0) {
 				
-				super.__update (true, updateChildren);
+				super.__update (true, updateChildren, maskGrahpics);
 				
 				if (updateChildren) {
 					
@@ -1643,7 +1692,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 			
 			if (DisplayObject.__worldTransformDirty > 0 || __dirty || DisplayObject.__worldRenderDirty > 0) {
 				
-				super.__update (false, updateChildren);
+				super.__update (false, updateChildren, maskGrahpics);
 				
 				if (updateChildren) {
 					
@@ -1662,7 +1711,7 @@ class Stage extends DisplayObjectContainer implements IModule {
 				// If we were dirty last time, we need at least one more
 				// update in order to clear "changed" properties
 				
-				super.__update (false, updateChildren);
+				super.__update (false, updateChildren, maskGrahpics);
 				
 				if (updateChildren) {
 					
@@ -1789,34 +1838,30 @@ class Stage extends DisplayObjectContainer implements IModule {
 	}
 	
 	
+	@:noCompletion private inline function get_displayState ():StageDisplayState {
+		
+		return __displayState;
+		
+	}
+	
+	
 	@:noCompletion private function set_displayState (value:StageDisplayState):StageDisplayState {
 		
-		/*switch(value) {
+		switch (value) {
+			
 			case NORMAL:
-				var fs_exit_function = untyped __js__("function() {
-			    if (document.exitFullscreen) {
-			      document.exitFullscreen();
-			    } else if (document.msExitFullscreen) {
-			      document.msExitFullscreen();
-			    } else if (document.mozCancelFullScreen) {
-			      document.mozCancelFullScreen();
-			    } else if (document.webkitExitFullscreen) {
-			      document.webkitExitFullscreen();
-			    }
-				}");
-				fs_exit_function();
-			case FULL_SCREEN | FULL_SCREEN_INTERACTIVE:
-				var fsfunction = untyped __js__("function(elem) {
-					if (elem.requestFullscreen) elem.requestFullscreen();
-					else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-					else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
-					else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-				}");
-				fsfunction(__element);
+				
+				//Lib.application.window.minimized = false;
+				Lib.application.window.fullscreen = false;
+			
 			default:
-		}*/
-		displayState = value;
-		return value;
+				
+				//Lib.application.window.minimized = false;
+				Lib.application.window.fullscreen = true;
+			
+		}
+		
+		return __displayState = value;
 		
 	}
 	

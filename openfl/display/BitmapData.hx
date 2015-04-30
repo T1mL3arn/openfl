@@ -5,7 +5,9 @@ import lime.graphics.opengl.GLBuffer;
 import lime.graphics.opengl.GLTexture;
 import lime.graphics.GLRenderContext;
 import lime.graphics.Image;
+import lime.graphics.ImageChannel;
 import lime.graphics.ImageBuffer;
+import lime.graphics.ImageChannel;
 import lime.graphics.utils.ImageCanvasUtil;
 import lime.math.ColorMatrix;
 import lime.utils.Float32Array;
@@ -178,17 +180,20 @@ class BitmapData implements IBitmapDrawable {
 		if (width > 0 && height > 0) {
 			
 			if (transparent) {
-
-				if ((fillColor & 0xFF000000) == 0) {				
+				
+				if ((fillColor & 0xFF000000) == 0) {
+					
 					fillColor = 0;
+					
 				}
-                
-			}
-			else {
+				
+			} else {
 				
 				fillColor = (0xFF << 24) | (fillColor & 0xFFFFFF);
 				
 			}
+			
+			fillColor = (fillColor << 8) | ((fillColor >> 24) & 0xFF);
 			
 			__image = new Image (null, 0, 0, width, height, fillColor);
 			__image.transparent = transparent;
@@ -557,13 +562,17 @@ class BitmapData implements IBitmapDrawable {
 				
 			case DATA:
 				
-				var renderSession = @:privateAccess Lib.current.stage.__renderer.renderSession;
+				var renderer = @:privateAccess Lib.current.stage.__renderer;
+				if (renderer == null) return;
+				
+				var renderSession = @:privateAccess renderer.renderSession;
 				var gl:GLRenderContext = renderSession.gl;
 				if (gl == null) return;
 				
 				
 				var mainSpritebatch = renderSession.spriteBatch;
 				var mainProjection = renderSession.projection;
+				var renderTransparent = renderSession.renderer.transparent;
 				
 				if (clipRect == null) {
 					clipRect = new Rectangle(0, 0, width, height);
@@ -571,8 +580,9 @@ class BitmapData implements IBitmapDrawable {
 				var tmpRect = clipRect.clone();
 				// Flip Y
 				tmpRect.y = height - tmpRect.bottom;
-
+				
 				var drawSelf = false;
+				//var drawSelf = true;
 				if (__spritebatch == null) {
 					__spritebatch = new SpriteBatch(gl);
 					drawSelf = true;
@@ -580,6 +590,7 @@ class BitmapData implements IBitmapDrawable {
 				
 				renderSession.spriteBatch = __spritebatch;
 				renderSession.projection = new Point((width / 2), -(height / 2));
+				renderSession.renderer.transparent = transparent;
 				
 				if (__framebuffer == null) {
 					__framebuffer = new FilterTexture(gl, width, height, smoothing);
@@ -608,7 +619,13 @@ class BitmapData implements IBitmapDrawable {
 				var matrixCache = source.__worldTransform;
 				var blendModeCache = source.blendMode;
 				
-				source.__worldTransform = matrix != null ? matrix : new Matrix ();
+				if (matrix == null) {
+					matrix = new Matrix();
+				}
+				
+				invertMatrix(matrix);
+				
+				source.__worldTransform = matrix;
 				source.__worldColorTransform = colorTransform != null ? colorTransform : new ColorTransform();
 				source.blendMode = blendMode;
 				source.__updateChildren (false);
@@ -621,6 +638,7 @@ class BitmapData implements IBitmapDrawable {
 				source.__updateChildren (true);
 				
 				__spritebatch.finish();
+				//__spritebatch = null;
 				
 				gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, __image.buffer.data);
 				
@@ -630,14 +648,16 @@ class BitmapData implements IBitmapDrawable {
 				
 				renderSession.spriteBatch = mainSpritebatch;
 				renderSession.projection = mainProjection;
+				renderSession.renderer.transparent = renderTransparent;
 				
 				gl.colorMask(true, true, true, renderSession.renderer.transparent);
 				
 				__texture = __framebuffer.texture;
 				__image.dirty = false;
-				__createUVs(true);
 				
+				__createUVs();
 				
+				invertMatrix(matrix);
 				
 			default:
 				
@@ -647,6 +667,19 @@ class BitmapData implements IBitmapDrawable {
 		
 	}
 	
+	
+	private function invertMatrix(matrix:Matrix):Void
+	{
+		var tx = matrix.tx;
+		var ty = matrix.ty;
+		
+		matrix.tx = 0;
+		matrix.ty = 0;
+		matrix.scale(1, -1);
+		matrix.translate(0, height);
+		matrix.tx += tx;
+		matrix.ty -= ty;
+	}
 	
 	public function encode (rect:Rectangle, compressor:Dynamic, byteArray:ByteArray = null):ByteArray {
 		
@@ -681,7 +714,7 @@ class BitmapData implements IBitmapDrawable {
 	public function fillRect (rect:Rectangle, color:Int):Void {
 		
 		if (!__isValid || rect == null) return;
-		__image.fillRect (rect.__toLimeRectangle (), color);
+		__image.fillRect (rect.__toLimeRectangle (), color, ARGB);
 		
 	}
 	
@@ -700,7 +733,7 @@ class BitmapData implements IBitmapDrawable {
 	public function floodFill (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.floodFill (x, y, color);
+		__image.floodFill (x, y, color, ARGB);
 		
 	}
 	
@@ -881,7 +914,7 @@ class BitmapData implements IBitmapDrawable {
 	public function getPixel (x:Int, y:Int):Int {
 		
 		if (!__isValid) return 0;
-		return __image.getPixel (x, y);
+		return __image.getPixel (x, y, ARGB);
 		
 	}
 	
@@ -911,7 +944,7 @@ class BitmapData implements IBitmapDrawable {
 	public function getPixel32 (x:Int, y:Int):Int {
 		
 		if (!__isValid) return 0;
-		return __image.getPixel32 (x, y);
+		return __image.getPixel32 (x, y, ARGB);
 		
 	}
 	
@@ -929,7 +962,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (!__isValid) return null;
 		if (rect == null) rect = this.rect;
-		return __image.getPixels (rect.__toLimeRectangle ());
+		return __image.getPixels (rect.__toLimeRectangle (), ARGB);
 		
 	}
 	
@@ -1233,7 +1266,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixel (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.setPixel (x, y, color);
+		__image.setPixel (x, y, color, ARGB);
 		
 	}
 	
@@ -1272,7 +1305,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixel32 (x:Int, y:Int, color:Int):Void {
 		
 		if (!__isValid) return;
-		__image.setPixel32 (x, y, color);
+		__image.setPixel32 (x, y, color, ARGB);
 		
 	}
 	
@@ -1299,7 +1332,7 @@ class BitmapData implements IBitmapDrawable {
 	public function setPixels (rect:Rectangle, byteArray:ByteArray):Void {
 		
 		if (!__isValid || rect == null) return;
-		__image.setPixels (rect.__toLimeRectangle (), byteArray);
+		__image.setPixels (rect.__toLimeRectangle (), byteArray, ARGB);
 		
 	}
 	
@@ -1556,29 +1589,18 @@ class BitmapData implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion private function __createUVs (?verticalFlip:Bool = false):Void {
+	@:noCompletion private function __createUVs ():Void {
 		
 		if (__uvData == null) __uvData = new TextureUvs();
 		
-		if (verticalFlip) {
-			__uvData.x0 = 0;
-			__uvData.y0 = 1;
-			__uvData.x1 = 1;
-			__uvData.y1 = 1;
-			__uvData.x2 = 1;
-			__uvData.y2 = 0;
-			__uvData.x3 = 0;
-			__uvData.y3 = 0;
-		} else {
-			__uvData.x0 = 0;
-			__uvData.y0 = 0;
-			__uvData.x1 = 1;
-			__uvData.y1 = 0;
-			__uvData.x2 = 1;
-			__uvData.y2 = 1;
-			__uvData.x3 = 0;
-			__uvData.y3 = 1;
-		}
+		__uvData.x0 = 0;
+		__uvData.y0 = 0;
+		__uvData.x1 = 1;
+		__uvData.y1 = 0;
+		__uvData.x2 = 1;
+		__uvData.y2 = 1;
+		__uvData.x3 = 0;
+		__uvData.y3 = 1;
 		
 	}
 	
@@ -1710,7 +1732,7 @@ class BitmapData implements IBitmapDrawable {
 		
 		if (__worldTransform == null) __worldTransform = new Matrix();
 		if (__worldColorTransform == null) __worldColorTransform = new ColorTransform();
-		renderSession.spriteBatch.renderBitmapData(this, true, __worldTransform, __worldColorTransform);
+		renderSession.spriteBatch.renderBitmapData(this, true, __worldTransform, __worldColorTransform, __worldColorTransform.alphaMultiplier, blendMode);
 		
 	}
 	

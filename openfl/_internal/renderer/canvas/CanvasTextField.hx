@@ -74,7 +74,7 @@ class CanvasTextField {
 		context.textBaseline = "top";
 		context.fillStyle = "#" + StringTools.hex (format.color, 6);
 		
-		var lines = text.split("\n");
+		var lines = text.split ("\n");
 		var yOffset:Float = 0;
 		var i:Int = 0;
 		var line:String;
@@ -106,8 +106,10 @@ class CanvasTextField {
 					context.fillText (line, 2 + offsetX, 2 + yOffset/*, textField.__width - 4*/);
 			}
 			
+			
 			yOffset += format.size * 1.185;
 			++i;
+			
 		}
 		
 		#end

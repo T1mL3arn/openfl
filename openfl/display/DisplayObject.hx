@@ -262,7 +262,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	 * performance increases when the movie clip is translated(when its <i>x</i>
 	 * and <i>y</i> position is changed).</p>
 	 */
-	public var cacheAsBitmap:Bool;
+	public var cacheAsBitmap(get, set):Bool;
 	
 	/**
 	 * An indexed array that contains each filter object currently associated
@@ -741,6 +741,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	@:noCompletion private var __worldZ:Int;
 	@:noCompletion private var __x:Float;
 	@:noCompletion private var __y:Float;
+	@:noCompletion private var __cacheAsBitmap:Bool;
 	
 	#if js
 	@:noCompletion private var __canvas:CanvasElement;
@@ -760,6 +761,7 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		__visible = true;
 		__x = 0;
 		__y = 0;
+		__cacheAsBitmap = false;
 		
 		__worldAlpha = 1;
 		__worldTransform = new Matrix ();
@@ -768,6 +770,8 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 		__rotationCosine = 1;
 		
 		__worldColorTransform = new ColorTransform ();
+		
+		__filters = new Array<BitmapFilter>();
 		
 		#if dom
 		__worldVisible = true;
@@ -1439,24 +1443,64 @@ class DisplayObject extends EventDispatcher implements IBitmapDrawable {
 	}
 	
 	
-	@:noCompletion private function get_filters ():Array<BitmapFilter> {
+	@:noCompletion private inline function get_cacheAsBitmap ():Bool {
 		
-		if (__filters == null) {
+		return __cacheAsBitmap;
+		
+	}
+	
+	
+	var __cacheOffsetX:Float;
+	var __cacheOffsetY:Float;
+	var __cacheWidth:Float;
+	var __cacheHeight:Float;
+	var __cacheDirty:Bool;
+	var __cached:Dynamic;
+	@:noCompletion private function set_cacheAsBitmap (value:Bool):Bool {
+		
+		if (__cacheAsBitmap == value) {
 			
-			return new Array ();
+			return value;
 			
-		} else {
+		} 
+		else {
 			
-			return __filters.copy ();
+			__cacheOffsetX = __x;
+			__cacheOffsetY = __y;
+			__cacheWidth = width;
+			__cacheHeight = height;
 			
+			
+			__cacheDirty = true;
 		}
 		
+		return __cacheAsBitmap = value;
+		
+	}
+	
+	
+	@noCompletion private function __updateCache():Void
+	{
+		
+	}
+	
+	
+	@:noCompletion private function get_filters ():Array<BitmapFilter> {
+		
+		return __filters.copy ();
 	}
 	
 	
 	@:noCompletion private function set_filters (value:Array<BitmapFilter>):Array<BitmapFilter> {
 		
-		// set
+		__filters = [];
+		
+		if (value != null)
+			for (filter in value)
+				__filters.push(filter.clone());
+		
+		if (__filters.length > 0)
+			cacheAsBitmap = true;
 		
 		return value;
 		

@@ -50,15 +50,21 @@ class CanvasBitmap {
 				
 			}
 			
-			if (scrollRect == null) {
+			var drawData:Dynamic = null;
+			
+			if (bitmap.cacheAsBitmap) {
 				
-				context.drawImage (bitmap.bitmapData.__image.src, 0, 0);
-				
-			} else {
-				
-				context.drawImage (bitmap.bitmapData.__image.src, scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height, scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
-				
+				bitmap.__updateCache();
+				drawData = bitmap.__cached;
 			}
+			else
+				drawData = bitmap.bitmapData.__image.src;
+				
+				
+			if (scrollRect == null) 
+				context.drawImage (drawData, 0, 0);
+			else 
+				context.drawImage (drawData, scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height, scrollRect.x, scrollRect.y, scrollRect.width, scrollRect.height);
 			
 			if (!bitmap.smoothing) {
 				

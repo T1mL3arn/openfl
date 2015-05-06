@@ -11,6 +11,10 @@ import openfl.geom.Rectangle;
 
 #if js
 import js.html.ImageElement;
+import js.Browser;
+import js.html.CanvasElement;
+import js.html.CanvasRenderingContext2D;
+import js.html.ImageData;
 #end
 
 
@@ -88,6 +92,7 @@ class Bitmap extends DisplayObjectContainer {
 	
 	#if js
 	@:noCompletion private var __image:ImageElement;
+	@:noCompletion private var __cachedImageData:ImageData;
 	#end
 	
 	
@@ -104,6 +109,60 @@ class Bitmap extends DisplayObjectContainer {
 			this.pixelSnapping = PixelSnapping.AUTO;
 			
 		}
+		
+	}
+	
+	
+	@:noCompletion private override function __updateCache ():Void {
+		
+		#if (js && html5)
+		if (__cacheDirty && bitmapData != null) {
+			
+			var canvas:CanvasElement = null;
+			
+			if (__cached == null) {
+				
+				canvas = cast Browser.document.createElement("canvas");
+				
+				__cached = canvas;
+				
+			}
+			
+			var w = Math.ceil(this.__cacheWidth);
+			var h = Math.ceil(this.__cacheHeight);
+			var offsX = this.__cacheOffsetX;
+			var offsY = this.__cacheOffsetY;
+			
+			canvas.width = w;
+			canvas.height = h;
+			
+			var context:CanvasRenderingContext2D = cast canvas.getContext("2d");
+			
+			//context.save();
+			context.setTransform(1, 0, 0, 1, -offsX, -offsY);
+			context.drawImage(bitmapData.__image.src, offsX, offsY, canvas.width, canvas.height );
+			
+			// apply filters
+			for (filter in __filters)
+			{
+				var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+				filter.__applyFilter(imageData, imageData, new Rectangle(0, 0, canvas.width, canvas.height), new Point(0, 0) );
+				context.putImageData(imageData, 0, 0);
+			}
+			
+			__cachedImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+			
+			//context.restore();
+			
+			__cacheDirty = false;
+			
+		}
+		else {
+			
+			__cacheDirty = false;
+			
+		}
+		#end
 		
 	}
 	

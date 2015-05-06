@@ -33,7 +33,7 @@ class ColorMatrixFilter extends BitmapFilter {
 	
 	public override function clone ():BitmapFilter {
 		
-		return new ColorMatrixFilter ();
+		return new ColorMatrixFilter (this.matrix);
 		
 	}
 	

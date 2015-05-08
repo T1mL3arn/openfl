@@ -74,8 +74,9 @@ class CanvasTextField {
 		context.textBaseline = "top";
 		context.fillStyle = "#" + StringTools.hex (format.color, 6);
 		
+		var isFirefox:Bool = Browser.navigator.userAgent.indexOf("Firefox") != -1;
 		var lines = text.split ("\n");
-		var yOffset:Float = 0;
+		var yOffset:Float = isFirefox ? 2 : 0;
 		var i:Int = 0;
 		var line:String;
 		

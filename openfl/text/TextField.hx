@@ -1419,13 +1419,10 @@ class TextField extends InteractiveObject {
 		
 		if (__ranges == null) {
 			
-			// HTML5 measureText().width contains full length of string
-			// where \n or \r included in the result width like character and we need split text
-			// for calculation of width of longest line.
-			// http://jsfiddle.net/kpnu9q0t/
-			
-			if (wordWrap) return [__measureLongestLine(__wrappedText, __textFormat)];
-			else return [__measureLongestLine(__text, __textFormat)] ;
+			if (wordWrap)
+				return [__measureStringWithDOM(__wrappedText, __textFormat).width];
+			else
+				return [__measureStringWithDOM(__text, __textFormat).width];
 			
 		} else {
 			
@@ -1581,7 +1578,26 @@ class TextField extends InteractiveObject {
 		
 		#end
 	}
-
+	
+	private function __measureStringWithDOM(str:String, format:TextFormat):Dynamic
+	{
+		var w:Float = 0;
+		var h:Float = 0;
+		
+		var div:DivElement = cast Browser.document.createElement("div");
+		div.innerHTML = new EReg ("\n", "g").replace (str, "<br>");
+		div.style.setProperty("font", __getFont(format), null);
+		div.style.position = "absolute";
+		div.style.top = "110%";
+		Browser.document.body.appendChild (div);
+		
+		w = div.clientWidth;
+		h = Std.parseFloat(Browser.document.defaultView.getComputedStyle(div, null).getPropertyValue("font-size"));
+		
+		Browser.document.body.removeChild(div);
+		
+		return { width:w, height:h };
+	}
 	
 	@:noCompletion private function __measureTextWithDOM ():Void {
 	 	
@@ -2286,11 +2302,12 @@ class TextField extends InteractiveObject {
 		if (__canvas != null) {
 			
 			// TODO: Make this more accurate
-			if (wordWrap && __wrappedText != null && __wrappedText!="") 
-				return __wrappedText.split('\n').length * __textFormat.size * 1.185;	
-			else if (__text !=null && __text != "")
-				return __text.split('\n').length * __textFormat.size * 1.185;
-			else return 0;
+			if (wordWrap && __wrappedText != null && __wrappedText != "")
+				return __wrappedText.split('\n').length * __measureStringWithDOM('M', __textFormat).height;
+			else if (__text != "")
+				return __text.split('\n').length * __measureStringWithDOM('M', __textFormat).height;
+			else
+				return 0;
 			
 		} else if (__div != null) {
 			

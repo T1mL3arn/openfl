@@ -18,8 +18,8 @@ class Error {
 		
 		this.message = message;
 		this.errorID = id;
-		name = "Error";
-		
+		//name = "Error";
+		name = StringTools.replace(Type.getClassName(Type.getClass(this)), 'openfl.errors.', "");
 	}
 	
 	

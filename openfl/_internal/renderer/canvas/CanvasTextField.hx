@@ -74,9 +74,9 @@ class CanvasTextField {
 		context.textBaseline = "top";
 		context.fillStyle = "#" + StringTools.hex (format.color, 6);
 		
-		var isFirefox:Bool = Browser.navigator.userAgent.indexOf("Firefox") != -1;
 		var lines = text.split ("\n");
-		var yOffset:Float = isFirefox ? 2 : 0;
+		var yOffset:Float = 0;
+		var lineHeight = textField.__measureStringWithDOM('M', format).height;
 		var i:Int = 0;
 		var line:String;
 		
@@ -84,7 +84,7 @@ class CanvasTextField {
 			
 			line = lines[i];
 			
-			if (yOffset + format.size * 1.185 > textField.__canvas.height - 2 && i > 0) {
+			if (yOffset + lineHeight > textField.__canvas.height - 2 && i > 0) {
 				
 				break;
 			}
@@ -94,21 +94,21 @@ class CanvasTextField {
 				case TextFormatAlign.CENTER:
 					
 					context.textAlign = "center";
-					context.fillText (line, textField.__width / 2, 2 + yOffset/*, textField.__width - 4*/);
+					context.fillText (line, textField.__width / 2, 2 + yOffset);
 					
 				case TextFormatAlign.RIGHT:
 					
 					context.textAlign = "end";
-					context.fillText (line, textField.__width - 2, 2 + yOffset/*, textField.__width - 4*/);
+					context.fillText (line, textField.__width - 2, 2 + yOffset);
 					
 				default:
 					
 					context.textAlign = "start";
-					context.fillText (line, 2 + offsetX, 2 + yOffset/*, textField.__width - 4*/);
+					context.fillText (line, 2 + offsetX, 2 + yOffset);
 			}
 			
 			
-			yOffset += format.size * 1.185;
+			yOffset += lineHeight;
 			++i;
 			
 		}

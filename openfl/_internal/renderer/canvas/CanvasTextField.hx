@@ -71,12 +71,12 @@ class CanvasTextField {
 		#if js
 		
 		context.font = textField.__getFont (format);
-		context.textBaseline = "top";
+		context.textBaseline = "alphabetic"; //"top" || "hanging" || "middle" || "alphabetic" || "ideographic" || "bottom"
 		context.fillStyle = "#" + StringTools.hex (format.color, 6);
 		
 		var lines = text.split ("\n");
-		var yOffset:Float = 0;
 		var lineHeight = textField.__measureStringWithDOM('M', format).height;
+		var yOffset:Float = lineHeight;
 		var i:Int = 0;
 		var line:String;
 		
@@ -84,7 +84,7 @@ class CanvasTextField {
 			
 			line = lines[i];
 			
-			if (yOffset + lineHeight > textField.__canvas.height - 2 && i > 0) {
+			if (yOffset/* + lineHeight*/ > textField.__canvas.height - 2 && i > 0) {
 				
 				break;
 			}

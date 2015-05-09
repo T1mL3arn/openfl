@@ -1588,6 +1588,11 @@ class TextField extends InteractiveObject {
 		div.innerHTML = new EReg ("\n", "g").replace (str, "<br>");
 		div.style.setProperty("font", __getFont(format), null);
 		div.style.position = "absolute";
+		div.style.setProperty("-moz-alignment-baseline", "alphabetic", null);
+		div.style.setProperty("-webkit-alignment-baseline", "alphabetic", null);
+		div.style.setProperty("-o-alignment-baseline", "alphabetic", null);
+		div.style.setProperty("-ms-alignment-baseline", "alphabetic", null);
+		div.style.setProperty("alignment-baseline", "alphabetic", null);
 		div.style.top = "110%";
 		Browser.document.body.appendChild (div);
 		
